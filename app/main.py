@@ -5,8 +5,6 @@ from typing import Optional
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, AnyHttpUrl
 
-import undetected_playwright.async_api as up
-
 app = FastAPI(title="Upwork Summary Scraper")
 
 
