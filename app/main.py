@@ -1,6 +1,6 @@
 # app/main.py
 import re
-from typing import Optional
+from typing import Optional, List
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, AnyHttpUrl
@@ -17,10 +17,10 @@ class UpworkSummaryResponse(BaseModel):
     job_id: Optional[str]
     apply_url: AnyHttpUrl
     summary: str
-    paragraphs: list[str]
+    paragraphs: List[str]
 
 
-async def fetch_upwork_summary(apply_url: str) -> list[str]:
+async def fetch_upwork_summary(apply_url: str) -> List[str]:
     # undetected_playwright launcher
     browser = await up.chromium.launch(
         headless=True,
