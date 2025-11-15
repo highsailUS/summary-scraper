@@ -23,12 +23,15 @@ class UpworkSummaryResponse(BaseModel):
     paragraphs: list[str]
 
 
-# ---------- Core Scraper (Railway-optimized) ----------
+# ---------- Core Scraper (Cloudflare + Railway Optimized) ----------
 
 async def fetch_upwork_summary(apply_url: str) -> list[str]:
     """
-    Fast Upwork scraper using static HTML (JS disabled).
-    Works on Railway without hanging or timing out.
+    Upwork scraper with:
+    - JS enabled (Cloudflare OK)
+    - All JS files blocked (React disabled)
+    - Fast SSR HTML extraction
+    - Railway-safe Chromium flags
     """
 
     async with async_playwright() as p:
@@ -51,26 +54,28 @@ async def fetch_upwork_summary(apply_url: str) -> list[str]:
                 "Chrome/122.0.0.0 Safari/537.36"
             ),
             locale="en-US",
-            java_script_enabled=False,     # 🚀 KEY: forces fast SSR HTML
+            java_script_enabled=True,   # JS ON → Cloudflare passes
         )
+
+        # BLOCK all JS file loads → prevents React from running
+        await context.route("**/*.js", lambda route: route.abort())
 
         page = await context.new_page()
 
         try:
-            # Fast load: no hydration, no JS scripts
             await page.goto(
                 apply_url,
-                wait_until="networkidle",
-                timeout=15000,  # 15 sec hard limit (Railway safe)
+                wait_until="domcontentloaded",
+                timeout=25000,
             )
 
             html = await page.content()
 
-            # Extract all <p> paragraphs (SSR HTML contains them)
+            # Extract all <p> paragraphs
             raw_paras = re.findall(
                 r"<p[^>]*>(.*?)</p>",
                 html,
-                flags=re.DOTALL | re.IGNORECASE
+                flags=re.DOTALL | re.IGNORECASE,
             )
 
             paragraphs = []
@@ -80,7 +85,7 @@ async def fetch_upwork_summary(apply_url: str) -> list[str]:
                     paragraphs.append(clean)
 
             if not paragraphs:
-                raise RuntimeError("No paragraphs found in SSR HTML")
+                raise RuntimeError("No job description paragraphs found")
 
             return paragraphs
 
