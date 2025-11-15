@@ -23,6 +23,7 @@ class UpworkSummaryResponse(BaseModel):
 
 
 async def fetch_upwork_summary(apply_url: str) -> list[str]:
+    # undetected_playwright launcher
     browser = await up.chromium.launch(
         headless=True,
         no_sandbox=True,
@@ -44,11 +45,15 @@ async def fetch_upwork_summary(apply_url: str) -> list[str]:
     try:
         await page.goto(apply_url, wait_until="load", timeout=45000)
 
-        # Ensure description is loaded
-        await page.wait_for_selector("section[data-test='job-description-section']", timeout=15000)
+        # Wait for description section to actually render
+        await page.wait_for_selector(
+            "section[data-test='job-description-section']",
+            timeout=20000
+        )
 
         html = await page.content()
 
+        # scrape <p> tags inside description
         raw_paras = re.findall(
             r"<p[^>]*>(.*?)</p>",
             html,
@@ -62,7 +67,7 @@ async def fetch_upwork_summary(apply_url: str) -> list[str]:
                 paragraphs.append(clean)
 
         if not paragraphs:
-            raise RuntimeError("No paragraphs found in description")
+            raise RuntimeError("No paragraphs found in job description")
 
         return paragraphs
 
