@@ -1,9 +1,8 @@
-FROM mcr.microsoft.com/playwright/python:v1.45.0-focal
+FROM python:3.10-slim
 
 WORKDIR /app
 
 COPY requirements.txt .
-
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app
