@@ -1,17 +1,38 @@
-# Use official Playwright image with browsers preinstalled
-FROM mcr.microsoft.com/playwright/python:v1.45.0-jammy
+FROM python:3.10-slim
+
+# System deps
+RUN apt-get update && apt-get install -y \
+    wget \
+    libnss3 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdrm2 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxrandr2 \
+    libgbm1 \
+    libpango-1.0-0 \
+    libasound2 \
+    libxdamage1 \
+    libatk1.0-data \
+    libatspi2.0-0 \
+    libpangocairo-1.0-0 \
+    libxshmfence1 \
+    chromium \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Install Python deps
 COPY requirements.txt .
+
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy app
+# Install playwright browsers
+RUN python -m playwright install chromium
+
 COPY app ./app
 
-# Expose port (Railway sets $PORT)
-ENV PYTHONUNBUFFERED=1
+ENV PORT=8080
 
-CMD ["bash", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
-
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
