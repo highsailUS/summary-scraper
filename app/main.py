@@ -7,7 +7,8 @@ from bs4 import BeautifulSoup
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, AnyHttpUrl
 
-SCRAPFLY_KEY = "scp-live-7b73349e10044c92aafa0cec64016b96"
+import os
+SCRAPFLY_KEY = os.environ.get("SCRAPFLY_KEY")
 
 app = FastAPI(title="Upwork Summary Scraper")
 
